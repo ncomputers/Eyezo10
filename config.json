@@ -1,0 +1,15 @@
+{
+  "stream_url": "http://localhost/zm/cgi-bin/nph-zms?mode=jpeg&monitor=5",
+  "model_path": "yolov8n.pt",
+  "fps": 15,
+  "skip_frames": 2,
+  "line_ratio": 0.5,
+  "v_thresh": 2,
+  "debounce": 0.5,
+  "retry_interval": 5,
+  "max_capacity": 500,
+  "warn_threshold": 80,
+  "redis_url": "redis://localhost:6379/0",
+  "default_workers": -1,
+  "port": 5002
+}

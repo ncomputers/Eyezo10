@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Crowd Dashboard</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <h1>Crowd Monitoring</h1>
+    <img src="/video_feed" width="640" height="480" />
+    <p>Entering: <span id="in_count">0</span></p>
+    <p>Exiting: <span id="out_count">0</span></p>
+    <p>Status: <span id="status" style="font-weight:bold">-</span></p>
+    <a href="/settings">Settings</a>
+    <script>
+    const ws = new WebSocket(`ws://${location.host}/ws/stats`);
+    ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        document.getElementById('in_count').textContent = data.in_count;
+        document.getElementById('out_count').textContent = data.out_count;
+        document.getElementById('status').textContent = data.status;
+        document.getElementById('status').style.color = data.status;
+    };
+    </script>
+</body>
+</html>
