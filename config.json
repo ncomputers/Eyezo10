@@ -7,6 +7,7 @@
   "v_thresh": 2,
   "debounce": 0.5,
   "retry_interval": 5,
+  "conf_threshold": 0.4,
   "max_capacity": 500,
   "warn_threshold": 80,
   "redis_url": "redis://localhost:6379/0",

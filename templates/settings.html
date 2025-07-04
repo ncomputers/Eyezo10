@@ -10,6 +10,7 @@
     <form method="post">
         <label>Max Capacity:<input type="number" name="max_capacity" value="{{ cfg.max_capacity }}"/></label><br/>
         <label>Warn Threshold (%):<input type="number" name="warn_threshold" value="{{ cfg.warn_threshold }}"/></label><br/>
+        <label>Confidence Threshold:<input type="number" step="0.01" name="conf_threshold" value="{{ cfg.conf_threshold }}"/></label><br/>
         <button type="submit">Save</button>
     </form>
     <a href="/">Back</a>

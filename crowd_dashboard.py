@@ -42,6 +42,8 @@ class FlowTracker:
     def __init__(self, url, cfg):
         for k, v in cfg.items():
             setattr(self, k, v)
+        if not hasattr(self, 'conf_threshold'):
+            self.conf_threshold = 0.4
         self.src_url = url
         self.device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
         if self.device.startswith('cuda'):
@@ -111,10 +113,12 @@ class FlowTracker:
             h, w = frame.shape[:2]
             x_line = int(w * self.line_ratio)
             cv2.line(frame, (x_line, 0), (x_line, h), (255, 0, 0), 2)
-            dets = [
-                ([*map(int, xyxy[:2]), int(xyxy[2]-xyxy[0]), int(xyxy[3]-xyxy[1])], conf, 'person')
-                for *xyxy, conf, cls in res.boxes.data.tolist() if int(cls) == 0
-            ]
+            dets = []
+            for *xyxy, conf, cls in res.boxes.data.tolist():
+                if int(cls) != 0 or conf < self.conf_threshold:
+                    continue
+                x1, y1, x2, y2 = map(int, xyxy)
+                dets.append(([x1, y1, x2 - x1, y2 - y1], conf, 'person'))
             tracks = self.tracker.update_tracks(dets, frame=frame)
             now = time.time()
             for tr in tracks:
@@ -166,7 +170,11 @@ class FlowTracker:
                 prev['zone'], prev['cx'] = zone, cx
                 color = (0, 255, 0) if zone == 'right' else (0, 0, 255)
                 cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
-                cv2.putText(frame, f"ID{tid}", (x1, y1 - 10),
+                conf = tr.get_det_conf()
+                label = f"ID{tid}"
+                if conf is not None:
+                    label += f" {conf:.2f}"
+                cv2.putText(frame, label, (x1, y1 - 10),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
             cv2.putText(frame, f"Entering: {self.in_count}", (10, 30),
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
@@ -246,10 +254,13 @@ async def update_settings(request: Request):
     form = await request.form()
     CONFIG_DATA['max_capacity'] = int(form['max_capacity'])
     CONFIG_DATA['warn_threshold'] = int(form['warn_threshold'])
+    if 'conf_threshold' in form:
+        CONFIG_DATA['conf_threshold'] = float(form['conf_threshold'])
     with open(CONFIG_PATH, 'w') as f:
         json.dump(CONFIG_DATA, f, indent=2)
     counter.max_capacity = CONFIG_DATA['max_capacity']
     counter.warn_threshold = CONFIG_DATA['warn_threshold']
+    counter.conf_threshold = CONFIG_DATA.get('conf_threshold', counter.conf_threshold)
     return templates.TemplateResponse('settings.html', {
         'request': request,
         'cfg': CONFIG_DATA,
